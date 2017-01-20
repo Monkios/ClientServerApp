@@ -33,12 +33,13 @@ namespace ConsoleClient
         private static string AskForUserName()
         {
             string name = "";
-            do {
+            do
+            {
                 Console.Clear();
 
                 Console.Write("Please, enter your name: ");
                 name = Console.ReadLine();
-            } while(String.IsNullOrWhiteSpace(name));
+            } while (String.IsNullOrWhiteSpace(name));
 
             return name;
         }
@@ -54,9 +55,9 @@ namespace ConsoleClient
                     break;
                 case PacketType.Welcome:
                     // A new client connected to the server
-                    if (p.data[0] != _name)
+                    if (p.data[0] != _server.ConnectionId)
                     {
-                        Console.WriteLine("New player " + p.data[0] + " connected.");
+                        Console.WriteLine("New player " + p.data[1] + " connected.");
                     }
                     break;
                 case PacketType.Quit:
@@ -83,7 +84,7 @@ namespace ConsoleClient
             while (true)
             {
                 input = Console.ReadLine();
-                switch(input)
+                switch (input)
                 {
                     case "exit":
                         _server.SendQuit(_server.ConnectionId);

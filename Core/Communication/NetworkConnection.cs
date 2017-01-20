@@ -11,7 +11,7 @@ namespace Core.Communication
         private Socket _socket;
 
         public bool IsConnected { get; private set; }
-        
+
         public string ConnectionId { get; set; }
 
         public NetworkConnection(Socket socket)
@@ -71,9 +71,10 @@ namespace Core.Communication
             _socket.Send(packet.ToBytes());
         }
 
-        public void SendWelcome(string username)
+        public void SendWelcome(string clientId, string username)
         {
             Packet packet = new Packet(PacketType.Welcome, ConnectionId);
+            packet.data.Add(clientId);
             packet.data.Add(username);
 
             _socket.Send(packet.ToBytes());

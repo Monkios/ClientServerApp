@@ -33,4 +33,14 @@ namespace Core.Data
             Direction = direction;
         }
     }
+
+    public class Player : GameObject
+    {
+        public readonly string Name;
+
+        public Player(string name)
+        {
+            Name = name;
+        }
+    }
 }
