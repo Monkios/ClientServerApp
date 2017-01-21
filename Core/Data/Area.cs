@@ -1,25 +1,26 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Core.GameObjects;
+using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 
 namespace Core.Data
 {
     public class Area
     {
-        public Vector2 size;
-        public List<GameObject> gameObjects;
+        public Vector2 Size { get; set; }
+        public List<IGameEntity> Entities { get; set; }
 
         public Area()
         {
-            gameObjects = new List<GameObject>();
+            Entities = new List<IGameEntity>();
         }
 
         public Area(string jsonData)
         {
             Area a = JsonConvert.DeserializeObject<Area>(jsonData);
-            this.size = a.size;
-            this.gameObjects = a.gameObjects;
+
+            Size = a.Size;
+            Entities = a.Entities;
         }
 
         public string ToJSON()

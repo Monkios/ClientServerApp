@@ -55,8 +55,11 @@
     <Compile Include="Communication\Packet.cs" />
     <Compile Include="Communication\PacketType.cs" />
     <Compile Include="Data\Area.cs" />
-    <Compile Include="Data\Direction.cs" />
-    <Compile Include="Data\GameObject.cs" />
+    <Compile Include="GameObjects\BasicGameEntity.cs" />
+    <Compile Include="GameObjects\Direction.cs" />
+    <Compile Include="GameObjects\GameEntityType.cs" />
+    <Compile Include="GameObjects\Hero.cs" />
+    <Compile Include="GameObjects\IGameEntity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

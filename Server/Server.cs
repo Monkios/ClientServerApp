@@ -1,5 +1,6 @@
 ﻿using Core.Communication;
 using Core.Data;
+using Core.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace Server
             Console.WriteLine("Starting server...");
 
             _map = new Area();
-            _map.gameObjects.Add(new BasicObject(0, 0, Direction.RIGHT));
+            _map.Entities.Add(new Hero("Monster", 0, 0, Direction.Down));
 
             lastConnectionId = 0;
             try

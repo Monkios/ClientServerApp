@@ -1,30 +1,32 @@
 ﻿using Core.Communication;
 using Core.Data;
+using Core.GameObjects;
 using System.Net.Sockets;
 
 namespace Server
 {
+    // A client should be a composition of a network connection, some player data and the hero entity.
     public class ClientData
     {
         public NetworkConnection connection;
-        public string Name { get { return _player.Name; } }
+        public string Name { get { return _character.Name; } }
 
-        private Player _player;
+        private Hero _character;
 
         public ClientData(Socket clientSocket)
         {
             connection = new NetworkConnection(clientSocket);
         }
 
-        public ClientData(Socket clientSocket, Player existingPlayer)
+        public ClientData(Socket clientSocket, Hero existingCharacter)
         {
             connection = new NetworkConnection(clientSocket);
-            _player = existingPlayer;
+            _character = existingCharacter;
         }
 
         public void CreatePlayer(string name)
         {
-            _player = new Player(name);
+            _character = new Hero(name, 0, 0, Direction.Right);
         }
 
         public void Disconnect()
