@@ -71,6 +71,14 @@ namespace Core.Communication
             _socket.Send(packet.ToBytes());
         }
 
+        public void SendNameDenied(string deniedName)
+        {
+            Packet packet = new Packet(PacketType.NameDenied, ConnectionId);
+            packet.data.Add(deniedName);
+
+            _socket.Send(packet.ToBytes());
+        }
+
         public void SendWelcome(string clientId, string username)
         {
             Packet packet = new Packet(PacketType.Welcome, ConnectionId);
@@ -107,9 +115,17 @@ namespace Core.Communication
 
         public void Disconnect()
         {
-            SendQuit(ConnectionId);
-            _socket.Close();
-            IsConnected = false;
+            try
+            {
+                SendQuit(ConnectionId);
+                _socket.Close();
+            } catch (SocketException e) {
+                Console.WriteLine("Connection was already broken: " + e.Message);
+            }
+            finally
+            {
+                IsConnected = false;
+            }
         }
 
         public void Dispose()

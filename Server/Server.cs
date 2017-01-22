@@ -14,6 +14,7 @@ namespace Server
     {
         static Socket _listenerSocket;
         static List<ClientData> _clients;
+        static List<Hero> _heroes;
 
         static int lastConnectionId;
 
@@ -38,6 +39,8 @@ namespace Server
             }
 
             _clients = new List<ClientData>();
+            _heroes = new List<Hero>();
+
             new Thread(ConnectClients).Start();
         }
 
@@ -84,12 +87,22 @@ namespace Server
             {
                 case PacketType.Registration:
                     Console.WriteLine("User " + packet.data[0] + " is connected.");
-                    GetClient(packet.senderId).CreatePlayer( packet.data[0] );
 
-                    // Send the new connection to all clients
-                    BroadcastWelcome(packet.senderId, packet.data[0]);
-                    // Send the map to the new client
-                    PushMap(packet.senderId);
+                    // No hero must already have this name
+                    if (GetHero(packet.data[0]) == null)
+                    {
+                        GetClient(packet.senderId).SetHero(CreateHero(packet.data[0]));
+
+                        // Send the new connection to all clients
+                        BroadcastWelcome(packet.senderId, packet.data[0]);
+                        // Send the map to the new client
+                        PushMap(packet.senderId);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Name is already taken.");
+                        SendNameDenied(packet.senderId,packet.data[0]);
+                    }
                     break;
                 case PacketType.Message:
                     Console.WriteLine(packet.senderId + "-" + packet.data[0] + " says : " + packet.data[1]);
@@ -100,7 +113,7 @@ namespace Server
                 case PacketType.Quit:
                     // A client is telling the server before quitting
                     Console.WriteLine("User " + GetClient(packet.senderId).Name + " has disconnected.");
-
+                    
                     RemoveClient(packet.data[0]);
                     break;
                 case PacketType.Map:
@@ -114,9 +127,27 @@ namespace Server
             }
         }
 
+        private static Hero CreateHero(string name)
+        {
+            var hero = new Hero(name, 0, 0, Direction.Right);
+            _heroes.Add(hero);
+
+            return hero;
+        }
+
+        private static Hero GetHero(string name)
+        {
+            return _heroes.SingleOrDefault(h => h.Name == name);
+        }
+
         private static void PushMap(string clientId)
         {
             GetClient(clientId).connection.SendMap(_map.ToJSON());
+        }
+
+        private static void SendNameDenied(string clientId, string deniedName)
+        {
+            GetClient(clientId).connection.SendNameDenied(deniedName);
         }
 
         private static void BroadcastWelcome(string clientId, string username)

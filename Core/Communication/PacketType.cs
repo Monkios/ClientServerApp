@@ -10,6 +10,7 @@ namespace Core.Communication
     {
         Message,
         Registration,
+        NameDenied,
         Welcome,
         Quit,
         Map

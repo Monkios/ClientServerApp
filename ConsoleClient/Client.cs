@@ -21,13 +21,16 @@ namespace ConsoleClient
 
                 _server = new NetworkConnection(socket);
                 _server.StartListening(ManagePacket);
-
-                OpenChatBox();
             }
             catch (Exception e)
             {
                 Console.WriteLine("An exception was thrown when trying to connect: " + e.Message);
             }
+
+            OpenChatBox();
+
+            Console.WriteLine("Press ENTER to exit.");
+            Console.ReadLine();
         }
 
         private static string AskForUserName()
@@ -51,6 +54,11 @@ namespace ConsoleClient
                 case PacketType.Registration:
                     // Client must validate its connection
                     _server.ConnectionId = p.senderId;
+                    _server.SendRegistration(_name);
+                    break;
+                case PacketType.NameDenied:
+                    Console.WriteLine("The name '" + _name + "' is already taken.");
+                    _name = AskForUserName();
                     _server.SendRegistration(_name);
                     break;
                 case PacketType.Welcome:
@@ -81,18 +89,25 @@ namespace ConsoleClient
         private static void OpenChatBox()
         {
             string input;
-            while (true)
+            while (_server.IsConnected)
             {
                 input = Console.ReadLine();
-                switch (input)
+
+                try
                 {
-                    case "exit":
-                        _server.SendQuit(_server.ConnectionId);
-                        _server.Disconnect();
-                        break;
-                    default:
-                        _server.SendMessage(_name, input);
-                        break;
+                    switch (input)
+                    {
+                        case "exit":
+                            _server.SendQuit(_server.ConnectionId);
+                            _server.Disconnect();
+                            break;
+                        default:
+                            _server.SendMessage(_name, input);
+                            break;
+                    }
+                } catch(SocketException se)
+                {
+                    Console.WriteLine("Message could not be sent: " + se.Message);
                 }
             }
         }

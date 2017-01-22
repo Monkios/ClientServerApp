@@ -24,9 +24,9 @@ namespace Server
             _character = existingCharacter;
         }
 
-        public void CreatePlayer(string name)
+        public void SetHero(Hero hero)
         {
-            _character = new Hero(name, 0, 0, Direction.Right);
+            _character = hero;
         }
 
         public void Disconnect()
