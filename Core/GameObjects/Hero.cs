@@ -12,7 +12,7 @@ namespace Core.GameObjects
         private static readonly int _width = 16;
         private static readonly int _height = 16;
 
-        public string Name { get; }
+        public readonly string Name;
 
         public Hero(string name, int x, int y, Direction direction) : base(GameEntityType.Hero, x, y, _width, _height)
         {

@@ -51,24 +51,22 @@ namespace Server
             ClientData client;
             while (true)
             {
-                _listenerSocket.Listen(0);
-
                 Console.WriteLine("Waiting...");
-                client = new ClientData(_listenerSocket.Accept());
-                client.connection.ConnectionId = (lastConnectionId++).ToString();
-                client.connection.StartListening(ManagePacket);
-
+                _listenerSocket.Listen(0);
+                var clientSocket = _listenerSocket.Accept();
+                
                 Console.WriteLine("New client connected, sending registration packet.");
-                client.connection.SendRegistration("server");
-
+                client = new ClientData(clientSocket, lastConnectionId.ToString(), ManagePacket);
                 _clients.Add(client);
+
+                lastConnectionId++;
             }
         }
 
         private static ClientData GetClient(string clientId)
         {
             return (from client in _clients
-                    where client.connection.ConnectionId == clientId
+                    where client.ConnectionId == clientId
                     select client).FirstOrDefault(); ;
         }
 
@@ -101,7 +99,7 @@ namespace Server
                     else
                     {
                         Console.WriteLine("Name is already taken.");
-                        SendNameDenied(packet.senderId,packet.data[0]);
+                        SendNameDenied(packet.senderId, packet.data[0]);
                     }
                     break;
                 case PacketType.Message:
@@ -113,7 +111,7 @@ namespace Server
                 case PacketType.Quit:
                     // A client is telling the server before quitting
                     Console.WriteLine("User " + GetClient(packet.senderId).Name + " has disconnected.");
-                    
+
                     RemoveClient(packet.data[0]);
                     break;
                 case PacketType.Map:
@@ -142,19 +140,21 @@ namespace Server
 
         private static void PushMap(string clientId)
         {
-            GetClient(clientId).connection.SendMap(_map.ToJSON());
+            var client = GetClient(clientId);
+            client.SendMap(_map.ToJSON());
         }
 
         private static void SendNameDenied(string clientId, string deniedName)
         {
-            GetClient(clientId).connection.SendNameDenied(deniedName);
+            var client = GetClient(clientId);
+            client.SendNameDenied(deniedName);
         }
 
         private static void BroadcastWelcome(string clientId, string username)
         {
             foreach (ClientData client in _clients)
             {
-                client.connection.SendWelcome(clientId, username);
+                client.SendWelcome(clientId, username);
             }
         }
 
@@ -162,7 +162,7 @@ namespace Server
         {
             foreach (ClientData client in _clients)
             {
-                client.connection.SendQuit(clientId);
+                client.SendQuit(clientId);
             }
         }
 
@@ -170,7 +170,7 @@ namespace Server
         {
             foreach (ClientData client in _clients)
             {
-                client.connection.SendMessage(senderName, msg);
+                client.SendMessage(senderName, msg);
             }
         }
     }

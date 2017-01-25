@@ -8,11 +8,12 @@ namespace Core.Communication
     public class NetworkConnection : IDisposable
     {
         public delegate void PacketManager(Packet p);
+
         private Socket _socket;
 
         public bool IsConnected { get; private set; }
-
         public string ConnectionId { get; set; }
+        public DateTime LastExchangeTime { get; private set; }
 
         public NetworkConnection(Socket socket)
         {
@@ -20,6 +21,7 @@ namespace Core.Communication
 
             ConnectionId = "-1";
             IsConnected = true;
+            LastExchangeTime = DateTime.Now;
         }
 
         public void StartListening(PacketManager manager)
@@ -63,12 +65,18 @@ namespace Core.Communication
             }
         }
 
+        private void SendPacket(Packet packet)
+        {
+            _socket.Send(packet.ToBytes());
+            LastExchangeTime = DateTime.Now;
+        }
+
         public void SendRegistration(string from)
         {
             Packet packet = new Packet(PacketType.Registration, ConnectionId);
             packet.data.Add(from);
 
-            _socket.Send(packet.ToBytes());
+            SendPacket(packet);
         }
 
         public void SendNameDenied(string deniedName)
@@ -76,7 +84,7 @@ namespace Core.Communication
             Packet packet = new Packet(PacketType.NameDenied, ConnectionId);
             packet.data.Add(deniedName);
 
-            _socket.Send(packet.ToBytes());
+            SendPacket(packet);
         }
 
         public void SendWelcome(string clientId, string username)
@@ -85,7 +93,7 @@ namespace Core.Communication
             packet.data.Add(clientId);
             packet.data.Add(username);
 
-            _socket.Send(packet.ToBytes());
+            SendPacket(packet);
         }
 
         public void SendQuit(string clientId)
@@ -93,24 +101,24 @@ namespace Core.Communication
             Packet packet = new Packet(PacketType.Quit, ConnectionId);
             packet.data.Add(clientId);
 
-            _socket.Send(packet.ToBytes());
+            SendPacket(packet);
         }
 
         public void SendMessage(string from, string msg)
         {
-            Packet p = new Packet(PacketType.Message, ConnectionId);
-            p.data.Add(from);
-            p.data.Add(msg);
+            Packet packet = new Packet(PacketType.Message, ConnectionId);
+            packet.data.Add(from);
+            packet.data.Add(msg);
 
-            _socket.Send(p.ToBytes());
+            SendPacket(packet);
         }
 
         public void SendMap(string map)
         {
-            Packet p = new Packet(PacketType.Map, ConnectionId);
-            p.data.Add(map);
+            Packet packet = new Packet(PacketType.Map, ConnectionId);
+            packet.data.Add(map);
 
-            _socket.Send(p.ToBytes());
+            SendPacket(packet);
         }
 
         public void Disconnect()
