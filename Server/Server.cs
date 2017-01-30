@@ -1,5 +1,6 @@
 ﻿using Core.Communication;
 using Core.Data;
+using Core.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,18 +13,19 @@ namespace Server
     public class Server
     {
         static Socket _listenerSocket;
-        static List<NetworkConnection> _clients;
+        static List<ClientData> _clients;
+        static List<Hero> _heroes;
 
         static int lastConnectionId;
 
-        static Area map;
+        static Area _map;
 
         static void Main(string[] args)
         {
             Console.WriteLine("Starting server...");
 
-            map = new Area();
-            map.gameObjects.Add(new BasicObject(0, 0, Direction.RIGHT));
+            _map = new Area();
+            _map.Entities.Add(new Hero("Monster", 0, 0, Direction.Down));
 
             lastConnectionId = 0;
             try
@@ -36,7 +38,9 @@ namespace Server
                 Console.WriteLine("An exception was thrown when trying to launch the server: " + e.Message);
             }
 
-            _clients = new List<NetworkConnection>();
+            _clients = new List<ClientData>();
+            _heroes = new List<Hero>();
+
             new Thread(ConnectClients).Start();
         }
 
@@ -44,24 +48,22 @@ namespace Server
         {
             Console.WriteLine("Ready to connect clients.");
 
-            NetworkConnection client;
+            ClientData client;
             while (true)
             {
-                _listenerSocket.Listen(0);
-
                 Console.WriteLine("Waiting...");
-                client = new NetworkConnection(_listenerSocket.Accept());
-                client.ConnectionId = (lastConnectionId++).ToString();
-                client.StartListening(ManagePacket);
-
+                _listenerSocket.Listen(0);
+                var clientSocket = _listenerSocket.Accept();
+                
                 Console.WriteLine("New client connected, sending registration packet.");
-                client.SendRegistration("server");
-
+                client = new ClientData(clientSocket, lastConnectionId.ToString(), ManagePacket);
                 _clients.Add(client);
+
+                lastConnectionId++;
             }
         }
 
-        private static NetworkConnection GetClient(string clientId)
+        private static ClientData GetClient(string clientId)
         {
             return (from client in _clients
                     where client.ConnectionId == clientId
@@ -70,7 +72,7 @@ namespace Server
 
         private static void RemoveClient(string clientId)
         {
-            NetworkConnection removedClient = GetClient(clientId);
+            ClientData removedClient = GetClient(clientId);
             removedClient.Disconnect();
             _clients.Remove(removedClient);
 
@@ -84,10 +86,21 @@ namespace Server
                 case PacketType.Registration:
                     Console.WriteLine("User " + packet.data[0] + " is connected.");
 
-                    // Send the new connection to all clients
-                    BroadcastWelcome(packet.data[0]);
-                    // Send the map to the new client
-                    PushMap(packet.senderId);
+                    // No hero must already have this name
+                    if (GetHero(packet.data[0]) == null)
+                    {
+                        GetClient(packet.senderId).SetHero(CreateHero(packet.data[0]));
+
+                        // Send the new connection to all clients
+                        BroadcastWelcome(packet.senderId, packet.data[0]);
+                        // Send the map to the new client
+                        PushMap(packet.senderId);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Name is already taken.");
+                        SendNameDenied(packet.senderId, packet.data[0]);
+                    }
                     break;
                 case PacketType.Message:
                     Console.WriteLine(packet.senderId + "-" + packet.data[0] + " says : " + packet.data[1]);
@@ -97,7 +110,7 @@ namespace Server
                     break;
                 case PacketType.Quit:
                     // A client is telling the server before quitting
-                    Console.WriteLine("User " + packet.data[0] + " has disconnected.");
+                    Console.WriteLine("User " + GetClient(packet.senderId).Name + " has disconnected.");
 
                     RemoveClient(packet.data[0]);
                     break;
@@ -112,22 +125,42 @@ namespace Server
             }
         }
 
-        private static void PushMap(string clientId)
+        private static Hero CreateHero(string name)
         {
-            GetClient(clientId).SendMap(map.ToJSON());
+            var hero = new Hero(name, 0, 0, Direction.Right);
+            _heroes.Add(hero);
+
+            return hero;
         }
 
-        private static void BroadcastWelcome(string username)
+        private static Hero GetHero(string name)
         {
-            foreach (NetworkConnection client in _clients)
+            return _heroes.SingleOrDefault(h => h.Name == name);
+        }
+
+        private static void PushMap(string clientId)
+        {
+            var client = GetClient(clientId);
+            client.SendMap(_map.ToJSON());
+        }
+
+        private static void SendNameDenied(string clientId, string deniedName)
+        {
+            var client = GetClient(clientId);
+            client.SendNameDenied(deniedName);
+        }
+
+        private static void BroadcastWelcome(string clientId, string username)
+        {
+            foreach (ClientData client in _clients)
             {
-                client.SendWelcome(username);
+                client.SendWelcome(clientId, username);
             }
         }
 
         private static void BroadcastQuit(string clientId)
         {
-            foreach (NetworkConnection client in _clients)
+            foreach (ClientData client in _clients)
             {
                 client.SendQuit(clientId);
             }
@@ -135,7 +168,7 @@ namespace Server
 
         private static void BroadcastMessage(string msg, string senderName)
         {
-            foreach (NetworkConnection client in _clients)
+            foreach (ClientData client in _clients)
             {
                 client.SendMessage(senderName, msg);
             }

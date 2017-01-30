@@ -21,24 +21,28 @@ namespace ConsoleClient
 
                 _server = new NetworkConnection(socket);
                 _server.StartListening(ManagePacket);
-
-                OpenChatBox();
             }
             catch (Exception e)
             {
                 Console.WriteLine("An exception was thrown when trying to connect: " + e.Message);
             }
+
+            OpenChatBox();
+
+            Console.WriteLine("Press ENTER to exit.");
+            Console.ReadLine();
         }
 
         private static string AskForUserName()
         {
             string name = "";
-            do {
+            do
+            {
                 Console.Clear();
 
                 Console.Write("Please, enter your name: ");
                 name = Console.ReadLine();
-            } while(String.IsNullOrWhiteSpace(name));
+            } while (String.IsNullOrWhiteSpace(name));
 
             return name;
         }
@@ -52,11 +56,16 @@ namespace ConsoleClient
                     _server.ConnectionId = p.senderId;
                     _server.SendRegistration(_name);
                     break;
+                case PacketType.NameDenied:
+                    Console.WriteLine("The name '" + _name + "' is already taken.");
+                    _name = AskForUserName();
+                    _server.SendRegistration(_name);
+                    break;
                 case PacketType.Welcome:
                     // A new client connected to the server
-                    if (p.data[0] != _name)
+                    if (p.data[0] != _server.ConnectionId)
                     {
-                        Console.WriteLine("New player " + p.data[0] + " connected.");
+                        Console.WriteLine("New player " + p.data[1] + " connected.");
                     }
                     break;
                 case PacketType.Quit:
@@ -80,18 +89,25 @@ namespace ConsoleClient
         private static void OpenChatBox()
         {
             string input;
-            while (true)
+            while (_server.IsConnected)
             {
                 input = Console.ReadLine();
-                switch(input)
+
+                try
                 {
-                    case "exit":
-                        _server.SendQuit(_server.ConnectionId);
-                        _server.Disconnect();
-                        break;
-                    default:
-                        _server.SendMessage(_name, input);
-                        break;
+                    switch (input)
+                    {
+                        case "exit":
+                            _server.SendQuit(_server.ConnectionId);
+                            _server.Disconnect();
+                            break;
+                        default:
+                            _server.SendMessage(_name, input);
+                            break;
+                    }
+                } catch(SocketException se)
+                {
+                    Console.WriteLine("Message could not be sent: " + se.Message);
                 }
             }
         }
