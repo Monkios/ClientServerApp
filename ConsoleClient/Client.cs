@@ -58,6 +58,7 @@ namespace ConsoleClient
                     break;
                 case PacketType.NameDenied:
                     Console.WriteLine("The name '" + _name + "' is already taken.");
+
                     _name = AskForUserName();
                     _server.SendRegistration(_name);
                     break;
@@ -78,6 +79,9 @@ namespace ConsoleClient
                 case PacketType.Message:
                     // A client sent a message
                     Console.WriteLine(p.data[0] + ": " + p.data[1]);
+                    break;
+                case PacketType.Tick:
+                    Console.WriteLine("Tick " + p.data[0] + " received.");
                     break;
                 case PacketType.Map:
                     // The server sent a complete refresh of the map

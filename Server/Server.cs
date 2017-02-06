@@ -17,6 +17,7 @@ namespace Server
         static List<Hero> _heroes;
 
         static int lastConnectionId;
+        static int currentTickId;
 
         static Area _map;
 
@@ -28,6 +29,7 @@ namespace Server
             _map.Entities.Add(new Hero("Monster", 0, 0, Direction.Down));
 
             lastConnectionId = 0;
+            currentTickId = 0;
             try
             {
                 _listenerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -42,6 +44,8 @@ namespace Server
             _heroes = new List<Hero>();
 
             new Thread(ConnectClients).Start();
+
+            LaunchGameLoop();
         }
 
         private static void ConnectClients()
@@ -54,7 +58,7 @@ namespace Server
                 Console.WriteLine("Waiting...");
                 _listenerSocket.Listen(0);
                 var clientSocket = _listenerSocket.Accept();
-                
+
                 Console.WriteLine("New client connected, sending registration packet.");
                 client = new ClientData(clientSocket, lastConnectionId.ToString(), ManagePacket);
                 _clients.Add(client);
@@ -125,6 +129,21 @@ namespace Server
             }
         }
 
+        private static void LaunchGameLoop()
+        {
+            while (true)
+            {
+                if (_clients.Count > 0)
+                {
+                    Console.WriteLine("Tick");
+                    BroadcastTick(currentTickId);
+                    currentTickId++;
+
+                    Thread.Sleep(1000);
+                }
+            }
+        }
+
         private static Hero CreateHero(string name)
         {
             var hero = new Hero(name, 0, 0, Direction.Right);
@@ -136,12 +155,6 @@ namespace Server
         private static Hero GetHero(string name)
         {
             return _heroes.SingleOrDefault(h => h.Name == name);
-        }
-
-        private static void PushMap(string clientId)
-        {
-            var client = GetClient(clientId);
-            client.SendMap(_map.ToJSON());
         }
 
         private static void SendNameDenied(string clientId, string deniedName)
@@ -171,6 +184,20 @@ namespace Server
             foreach (ClientData client in _clients)
             {
                 client.SendMessage(senderName, msg);
+            }
+        }
+
+        private static void PushMap(string clientId)
+        {
+            var client = GetClient(clientId);
+            client.SendMap(_map.ToJSON());
+        }
+
+        private static void BroadcastTick(int tickId)
+        {
+            foreach (ClientData client in _clients)
+            {
+                client.SendTick(tickId);
             }
         }
     }

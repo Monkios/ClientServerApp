@@ -12,6 +12,7 @@ namespace Core.Communication
         Registration,
         NameDenied,
         Welcome,
+        Tick,
         Quit,
         Map
     }

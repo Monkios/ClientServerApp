@@ -65,7 +65,12 @@ namespace Core.Communication
             }
         }
 
-        private void SendPacket(Packet packet)
+        protected Packet CreatePacket(PacketType type)
+        {
+            return new Packet(type, ConnectionId);
+        }
+
+        protected void SendPacket(Packet packet)
         {
             _socket.Send(packet.ToBytes());
             LastExchangeTime = DateTime.Now;
@@ -73,32 +78,15 @@ namespace Core.Communication
 
         public void SendRegistration(string from)
         {
-            Packet packet = new Packet(PacketType.Registration, ConnectionId);
+            var packet = CreatePacket(PacketType.Registration);
             packet.data.Add(from);
-
-            SendPacket(packet);
-        }
-
-        public void SendNameDenied(string deniedName)
-        {
-            Packet packet = new Packet(PacketType.NameDenied, ConnectionId);
-            packet.data.Add(deniedName);
-
-            SendPacket(packet);
-        }
-
-        public void SendWelcome(string clientId, string username)
-        {
-            Packet packet = new Packet(PacketType.Welcome, ConnectionId);
-            packet.data.Add(clientId);
-            packet.data.Add(username);
 
             SendPacket(packet);
         }
 
         public void SendQuit(string clientId)
         {
-            Packet packet = new Packet(PacketType.Quit, ConnectionId);
+            var packet = CreatePacket(PacketType.Quit);
             packet.data.Add(clientId);
 
             SendPacket(packet);
@@ -106,17 +94,9 @@ namespace Core.Communication
 
         public void SendMessage(string from, string msg)
         {
-            Packet packet = new Packet(PacketType.Message, ConnectionId);
+            var packet = CreatePacket(PacketType.Message);
             packet.data.Add(from);
             packet.data.Add(msg);
-
-            SendPacket(packet);
-        }
-
-        public void SendMap(string map)
-        {
-            Packet packet = new Packet(PacketType.Map, ConnectionId);
-            packet.data.Add(map);
 
             SendPacket(packet);
         }

@@ -1,6 +1,7 @@
 ﻿using Core.Communication;
 using Core.Data;
 using Core.GameObjects;
+using Server.Communication;
 using System.Net.Sockets;
 
 namespace Server
@@ -11,12 +12,12 @@ namespace Server
         public string Name { get { return _character.Name; } }
         public string ConnectionId { get { return _connection.ConnectionId; } }
 
-        private NetworkConnection _connection;
+        private ServerNetworkConnection _connection;
         private Hero _character;
 
         public ClientData(Socket clientSocket, string connectionId, NetworkConnection.PacketManager packetManager)
         {
-            _connection = new NetworkConnection(clientSocket);
+            _connection = new ServerNetworkConnection(clientSocket);
             _connection.ConnectionId = connectionId;
 
             _connection.StartListening(packetManager);
@@ -26,7 +27,7 @@ namespace Server
 
         public ClientData(Socket clientSocket, Hero existingCharacter)
         {
-            _connection = new NetworkConnection(clientSocket);
+            _connection = new ServerNetworkConnection(clientSocket);
             _character = existingCharacter;
         }
 
@@ -38,10 +39,6 @@ namespace Server
         public void Disconnect()
         {
             _connection.Disconnect();
-        }
-
-        public void SendMap(string map){
-            _connection.SendMap(map);
         }
 
         public void SendNameDenied(string deniedName){
@@ -58,6 +55,16 @@ namespace Server
 
         public void SendMessage(string senderName, string msg){
             _connection.SendMessage(senderName, msg);
+        }
+
+        public void SendMap(string map)
+        {
+            _connection.SendMap(map);
+        }
+
+        public void SendTick(int tickId)
+        {
+            _connection.SendTick(tickId);
         }
     }
 }
