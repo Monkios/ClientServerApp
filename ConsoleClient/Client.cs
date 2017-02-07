@@ -10,8 +10,11 @@ namespace ConsoleClient
         static string _name;
         static NetworkConnection _server;
 
+        static int _lastTickReceived;
+
         static void Main(string[] args)
         {
+            _lastTickReceived = -1;
             _name = AskForUserName();
 
             try
@@ -82,6 +85,8 @@ namespace ConsoleClient
                     break;
                 case PacketType.Tick:
                     Console.WriteLine("Tick " + p.data[0] + " received.");
+
+                    _lastTickReceived = Int32.Parse(p.data[0]);
                     break;
                 case PacketType.Map:
                     // The server sent a complete refresh of the map

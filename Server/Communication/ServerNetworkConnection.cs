@@ -20,15 +20,6 @@ namespace Server.Communication
             SendPacket(packet);
         }
 
-        public void SendWelcome(string clientId, string username)
-        {
-            var packet = CreatePacket(PacketType.Welcome);
-            packet.data.Add(clientId);
-            packet.data.Add(username);
-
-            SendPacket(packet);
-        }
-
         public void SendMap(string map)
         {
             var packet = CreatePacket(PacketType.Map);
@@ -41,6 +32,15 @@ namespace Server.Communication
         {
             var packet = CreatePacket(PacketType.Tick);
             packet.data.Add(tickId.ToString());
+
+            SendPacket(packet);
+        }
+
+        public void SendWelcome(string clientId, string username)
+        {
+            var packet = CreatePacket(PacketType.Welcome);
+            packet.data.Add(clientId);
+            packet.data.Add(username);
 
             SendPacket(packet);
         }

@@ -76,10 +76,11 @@ namespace Core.Communication
             LastExchangeTime = DateTime.Now;
         }
 
-        public void SendRegistration(string from)
+        public void SendMessage(string senderName, string msg)
         {
-            var packet = CreatePacket(PacketType.Registration);
-            packet.data.Add(from);
+            var packet = CreatePacket(PacketType.Message);
+            packet.data.Add(senderName);
+            packet.data.Add(msg);
 
             SendPacket(packet);
         }
@@ -92,11 +93,10 @@ namespace Core.Communication
             SendPacket(packet);
         }
 
-        public void SendMessage(string from, string msg)
+        public void SendRegistration(string username)
         {
-            var packet = CreatePacket(PacketType.Message);
-            packet.data.Add(from);
-            packet.data.Add(msg);
+            var packet = CreatePacket(PacketType.Registration);
+            packet.data.Add(username);
 
             SendPacket(packet);
         }

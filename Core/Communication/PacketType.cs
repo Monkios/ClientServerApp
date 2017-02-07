@@ -8,12 +8,12 @@ namespace Core.Communication
 {
     public enum PacketType
     {
-        Message,
-        Registration,
-        NameDenied,
-        Welcome,
-        Tick,
-        Quit,
-        Map
+        NameDenied, // [DeniedName] - Server only
+        Map, // [Map] - Server only
+        Message, // [SenderName, Message]
+        Quit, // [Client Id]
+        Registration, // [Username]
+        Tick, // [Tick Id] - Server only
+        Welcome // [Client Id, Username] - Server only
     }
 }

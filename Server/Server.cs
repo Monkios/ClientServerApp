@@ -118,10 +118,6 @@ namespace Server
 
                     RemoveClient(packet.data[0]);
                     break;
-                case PacketType.Map:
-                    // The client wants a clean copy of the map
-                    PushMap(packet.senderId);
-                    break;
                 case PacketType.Welcome:
                 default:
                     Console.WriteLine("Invalid packet type: " + packet.type.ToString());
